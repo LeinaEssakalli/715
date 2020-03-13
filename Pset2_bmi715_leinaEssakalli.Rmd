@@ -1,0 +1,492 @@
+---
+title: "BMI715 Problem Set 2-Leina Essakalli"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dslabs)
+library(tidyverse)
+library(ggplot2)
+#install.packages('DAAG')
+library(DAAG)
+```
+
+### Instructions
+
+Please submit **both the Rmd file and PDF** before class on Tuesday, November 7th 2019. 
+Problem sets may be submitted within a week past the due date at a 20% penalty; each person is allowed to submit 
+one problem late (within a week) without penalty. 
+
+Please comment your code, because it is part of the requirements of each exercise.
+
+If you have any questions, please post them on the discussion page on Canvas or email `daniel_lee@g.harvard.edu`.
+
+### 1. Cross Country (30 points)
+
+Elite athletes sometimes go to train in high altitudes where the air is "thinner". When in this higher altitude, the body compensates for the decrease in oxygen by producing more red blood cells to aid in oxygen delivery to the muscles. These athletes then head to a competition at a lower elevation to take advantage of their changed physiology.
+
+A student chose to test this out by recording times for ten runs before training in a higher altitude and ten runs after. The results are recorded below
+
+```{r, include = T}
+runtimes <- c( 9.01, 10.35, 11.88, 10.58, 11.48, 12.24, 11.15, 10.84, 11.13, 11.54,
+              9.65, 10.10,  9.38,  9.73,  8.47,  9.95, 10.51, 11.55, 9.61, 9.77)
+names(runtimes) <- rep(c("before", "after"), each = 10)
+
+```
+
+#### 1.1 (5 points)
+
+Plot a histogram of the runtimes before and after training. Comment on the histograms.
+
+```{r}
+hist(runtimes[1:10],main="Histogram of times before traning in higher altitude" )
+hist(runtimes[11:20],main="Histogram of times after traning in higher altitude")
+
+#it looks like before training the times are higher in general(mostly about 10.5) - the results are also more spread
+#after training most of the times are between 9.5 and 10 
+
+```
+```{r}
+mean(runtimes[1:10])-mean(runtimes[11:20])
+```
+
+
+#### 1.2 (2 points)
+
+
+State the null and alternative hypothesis.
+
+**ANSWER**
+
+$H_0:$ The mean of run times before the training is equal to the mean after training
+
+$H_1:$ the mean of run times after training is lower to the mean before training -
+
+
+
+
+#### 1.3 (3 points)
+
+Would we perform a paired or unpaired t-test? Why or why not?
+
+```{txt}
+
+The student reccord 10 run before and 10 run after but it doesnt for exemple specify if the first run before  and the first run after is the performance of the same athele- 
+So we should  perform an unpaired t-test because each data point in one sample is not related to a unique data point in the other.
+
+```
+
+#### 1.4 (3 points)
+
+Is it more appropriate to perform a one-sided or two-sided test according to your hypothesis? Why?
+
+```{txt}
+is it more appropriate to perform a  one sided- 
+it would be a two sided if the alternative hypothesis would have been the mean before training is different to the mean after training (instead of lower or higher)
+```
+
+
+#### 1.5 (5 points)
+
+Does the statistic change whether you assume equal or unequal variance?
+```{r}
+before<-runtimes[1:10]
+after<-runtimes[11:20]
+#assuming equal variance
+#alternative hypothesis- the mean of run times before training is higher to the mean after training
+equal_variance_test<-t.test(before,after,alternative="greater",paired=FALSE,var.equal=TRUE,conf.level=0.95 )
+#assuming unequal vairance
+unequal_variance_test<-t.test(before,after,paired=FALSE,var.equal=FALSE,alternative="greater",conf.level=0.95)
+print(equal_variance_test)
+print(unequal_variance_test)
+```
+```{txt}
+Does the statistic change whether you assume equal or unequal variance?
+ 
+  The tscore doesnt change when we assume equal or unequal variance - 
+  The p score is a bit different in both cases ( Im not sure what you meant by statistic ?)
+```
+
+Test whether the variance of the student's runs before and after are the same.
+```{r}
+#What is the ratio of variances?
+before_group_variance=var(before)
+after_group_variance=var(after)
+
+F<-before_group_variance/after_group_variance
+print(paste0('the ratio of variance is ', F))
+```
+
+```{r}
+# Another way to get ratio between variances
+#var.test- Performs an F test to compare the variances of two samples
+F1<-var.test (before, after, ratio = 1,
+         alternative = "greater",
+         conf.level = 0.95)
+print(F1)
+# - so we should reject the hypothesis that the variance is the same
+```
+
+```{txt}
+ratio of variances is 1.322344 
+```
+
+
+```{r}
+F_0.975=qf(0.975,9,9) #size sample=10 so DF=9
+print(F_0.975)
+
+```
+```{txt}
+ratio of variance<F_0.975
+so there is no evidance for different population variance
+t = 3.0101, df = 18, p-value = 0.003759- so I reject the Null 
+
+```
+
+
+#### 1.6 (5 points)
+
+Test your hypothesis with the test you find appropriate (e.g paired? var.equal?) and comment on the results by addressing the following:
+
+* Can you reject the null hypothesis?
+* Did training in the higher altitude improve the student's run time?
+* Is there a large difference between the run times before and after?
+* What does this p-value mean? (relate to definition used in lecture 3)
+
+```{txt}
+t = 3.0101, df = 18, p-value = 0.003759 given the results of the t test we can say that 
+- we can reject the null hypothesis - and accept the alternative hypthoesis :the mean of run times after training is lower to the mean before training -
+
+- that the training in higher altitude improve the students run time 
+- From the t-test we cant conclude wheter the difference is large or small before or after
+- the p value is  the probability of obtaining a statistic as extreme or more extreme under the null hypothesis- so that means that in our case if we assume that 'The mean of run times before the training is equal to the mean after training' the probability that we obtain the results that we obtain or more extreme than that is 0.003759 which is a very low number(we usually use0.05 as a threshold)- since its very unlikely we reject the null 
+
+```
+
+
+#### 1.7 (7 points)
+
+Simulate the null distribution of the difference in runtimes, $T = \bar{X}_1-\bar{X}_2$ where $\bar{X}$ represents the mean of x, using permutation by randomly assigning labels to the data a total 10,000 times. *(use set.seed(5) at the beginning of the code block)*
+
+Plot a histogram of t distribution.
+
+
+
+```{r}
+
+#How many ways are there to assign 10 before_training and 10 after_aftertraining labels to 20 plots
+number_of_random_assignements<-10000
+x_mean_before<-c(number_of_random_assignements)
+x_mean_after<-c(number_of_random_assignements)
+mean_differences<-c(number_of_random_assignements)
+runtimes_sample<-c(10)
+
+```
+
+
+```{r}
+set.seed(5)
+for (i in 1:number_of_random_assignements){
+runtimes_sample <- sample(c(runtimes), 20, replace = TRUE , prob = NULL) #THIS IS USED TO SHUFFTLE the data which is 
+x_mean_before[i]<-mean(runtimes_sample[1:10]) #10  first
+x_mean_after[i]<-mean(runtimes_sample[11:20]) #10 last
+mean_differences[i]<-x_mean_before[i]-x_mean_after[i]
+}
+```
+
+```{r}
+hist(mean_differences,xlab = 'mean_before - mean_after ',ylab = 'density',breaks=50)
+abline(v =mean(runtimes[1:10])-mean(runtimes[11:20]), col="red", lwd=3, lty=2)
+```
+
+
+According to this distribution how many times do we see a difference as extreme or more extreme than the one we observe? In this case, can we reject the null hypothesis?
+```{txt}
+the read line represent the mean differences given in the pset - How many times to we see a difference as or more extreme?(We want the density at the right of the red line )
+
+```
+
+```{r}
+red_line<-mean(runtimes[1:10])-mean(runtimes[11:20])
+number_of_cases_difference_as_extreme_or_more_extreme<-sum(mean_differences > red_line)
+proportion_of_case_more_extreme<-number_of_cases_difference_as_extreme_or_more_extreme/length(mean_differences)
+print(paste0('the proportion_of_case_more_extreme_than the value that we obtain is ',proportion_of_case_more_extreme))
+print('in that case we can reject the null hypothesis')
+```
+
+
+### 2. Gapminder (25 points)
+
+Consider the dataset `gapminder` from the R package `dslabs`. The dataset offers information on the infant mortality rate, the life expectancy and fertility of 185 countries and include data on each country's GDP and population size. This data has been gathered by the Gapminder Foundation, which is a non-profit Swedish venture that promotes sustainable global developement through statistics regarding social, economic and environmental development.
+
+```{r, include = T}
+str(gapminder)
+
+```
+
+#### 2.1 (5 points)
+
+Using the most recent recordings, we are going to investigate whether there is a significant difference in the life expectency of people in Europe vs. Africa. 
+
+Begin by looking into the distribution of the life expectency of the two continents
+
+```{r}
+#view(gapminder)
+```
+
+```{r}
+gapminder_data<-gapminder%>%select(c(life_expectancy,continent,year,country))%>% filter(year ==2016) %>%filter(continent =='Europe' |continent =='Africa' ) 
+
+gapminder_data_Europe<-gapminder_data%>%filter(continent =='Europe')
+gapminder_data_Africa<-gapminder_data%>%filter(continent =='Africa')
+```
+
+```{r}
+#histogram to vizualise the distributions
+LE_Europe<-gapminder_data_Europe$life_expectancy
+LE_Africa<-gapminder_data_Africa$life_expectancy
+hist(LE_Europe,breaks=20,main='life expectancy distribution in Europe',xlim =c(20,100))
+hist(LE_Africa,breaks=20,main='life expectancy distribution in Africa',xlim =c(20,100))
+```
+
+#### 2.2 (2 points)
+
+State the null and alternative hypothesis
+
+**ANSWER**
+
+$H_0:$ In 2016,he mean of life expectency in Europe is = to the mean of the life expectency in Africa (according to the Gapminder Foundation)
+
+$H_1:$ In 2016, the mean of life expectency in Europe is higher then the mean of life expectency in Africa(according Gapminder Foundation)
+
+
+#### 2.3 (5 points)
+
+Test your hypothesis. What are the assumptions of this test?
+
+```{txt}
+Hypothesis for this test : one-sided , unpaired -lets test if its equal variance - 
+```
+
+```{r}
+df1=length(LE_Europe)-1
+df2=length(LE_Africa)-1
+variance_test_continent <- var.test(LE_Europe,LE_Africa, alternative = "greater")
+variance_test_continent
+#F = 0.29844
+qf(0.975,df1,df2)
+#qf(0.975,df1,df2)>0.29844 
+```
+
+```{txt}
+So we the variances are differents in two groups- lets run the t stat 
+```
+
+```{r}
+t_test_LE_continents<-t.test(LE_Europe,LE_Africa,alternative="greater",paired=FALSE,var.equal=FALSE,conf.level=0.95 )
+t_test_LE_continents
+```
+
+
+#### 2.4 (5 points)
+
+Comment on the results by addressing the following:
+
+* Can you reject the null hypothesis?
+* Which country has a higher life expectancy?
+* Is there a large difference between the life expectancy of these two continents?
+* What does this p-value mean? (relate to definition used in lecture 3)
+
+```{txt}
+p-value < 2.2e-16 - so we can reject the null hypothesis - we accept the alternative hypothesis
+
+In 2016, the mean of life expectency in Europe is higher then the mean of life expectency in Africa(according Gapminder Foundation)
+
+```
+
+```{r}
+max_L_expectancy<-gapminder_data[which.max(gapminder_data$life_expectancy),]
+print(paste0('the country with the max LE is ',max_L_expectancy$country))
+
+```
+```{txt}
+is it hard to conclude on how large difference between the life expectancy of these two continents is using the t test 
+the p value is  the probability of obtaining a statistic as extreme or more extreme under the null hypothesis- so that means that in our case if we assume that 'In 2016,he mean of life expectency in Europe is = to the mean of the life expectency in Africa (according to the Gapminder Foundation)' the probability that we obtain the results that we obtain or more extreme than that is lower than 2.2e-16 which is a very low number(we usually use0.05 as a threshold)- since its very unlikely we reject the null 
+
+```
+
+#### 2.5 (8 points)
+
+Now investigate whether there is a significant difference in the life expectancy between the two most recent recordings.
+```{txt}
+Here I assumed that we are still focusing only on the 2 continents - EUROPE AND AFRICA-
+```
+
+```{r}
+#lets first vizualise 
+gapminder_data_1617<-gapminder%>%select(c(life_expectancy,year))%>% filter(year ==2016|year==2015) 
+gapminder_data_16<-gapminder_data_1617%>% filter(year ==2016) 
+gapminder_data_15<-gapminder_data_1617%>% filter(year ==2015)
+LE16<-gapminder_data_16$life_expectancy
+LE15<-gapminder_data_15$life_expectancy
+hist(LE15,breaks=20,main='life expectancy distribution in 2015',xlim =c(20,100))
+hist(LE16,breaks=20,main='life expectancy distribution in 2016',xlim =c(20,100))
+
+```
+
+State the null and alternative hypothesis
+
+**ANSWER**
+
+$H_0:$ Mean of life expectance(LE) in 2015 = mean of LE in 2016 
+
+$H_1:$Mean of life expectance(LE) in 2015 is different than mean of LE in 2016 
+
+Test your hypothesis
+```{txt}
+so two sided - paired(we are following countries over the years(2015 and 2016))- can we assume equal variance? lets test 
+```
+
+```{r}
+variance_test_1516<-var.test(LE15,LE16,alternative = "two.sided")
+variance_test_1516
+#we can assume equal variance 
+```
+ 
+```{r}
+t_test_LE_1516<-t.test(LE15,LE16,alternative="two.sided",paired=TRUE,var.equal=TRUE,conf.level=0.95 )
+t_test_LE_1516
+```
+
+Comment on the results. Consider the following:
+
+* Can you accept the null hypothesis?
+* Which year has a higher life expectancy?
+* Is there a large difference between the life expectancy of these two years?
+* Is the result significant?
+
+```{txt}
+reject the null hypothesis because the -p-value = 1.23e-15 
+t score is <0 that means that in the year 2016 there was a higher life expectancy
+the p value is  the probability of obtaining a statistic as extreme or more extreme under the null hypothesis- so that means that in our case if we assume that 'Mean of life expectance(LE) in 2015 = mean of LE in 2016 ' the probability that we obtain the results that we obtain or more extreme than that is 1.23e-15  which is a very low number(we usually use0.05 as a threshold)- since its very unlikely therefore we reject the null 
+
+```
+
+
+### 3. ANOVA (20)
+
+#### 3.1 (3 points)
+
+When would we use an ANOVA analysis?
+
+```{txt}
+We should use ANOVA when we want to test more than 2 groups 
+```
+
+
+#### 3.2 (2 points)
+
+We are going to look into whether there is a significant difference between the infant_mortality rate of each continent.
+
+State the null and alternative hypothesis
+
+**ANSWER**
+
+$H_0:$ The means of infant mortality is the same across all continents 
+
+$H_1:$ At least one of the mean of infant mortality in one of the continent is different from others 
+
+
+#### 3.3 (5 points)
+
+Let's begin by looking at a box plot of the raw data
+
+```{r}
+gapminder_ANOVA<-gapminder%>%select(c(infant_mortality,continent))
+infant_mortality_for_ANOVA<-gapminder_ANOVA$infant_mortality
+
+boxplot(infant_mortality_for_ANOVA~gapminder_ANOVA$continent,xlab="Different Continents",ylab="infant mortality",main="Box plot of infant mortality across the 5 different continents")
+```
+
+
+
+
+#### 3.4 (5 points)
+
+Test your hypothesis using ANOVA
+
+```{r}
+anova_test<-aov(infant_mortality~continent, data=gapminder_ANOVA)
+print(anova_test)
+sum_anova<-summary(aov(infant_mortality~continent, data=gapminder_ANOVA))
+print(sum_anova)
+```
+
+```{txt}
+pvalue <2e-16 so we can reject the null hypothesis
+```
+
+#### 3.5 (2 points)
+
+What is the equivalent of doing an ANOVA on two samples?
+
+```{txt}
+doing ANOVA on two sample is equivalent to doing a t test
+```
+
+
+#### 3.6 (3 points)
+
+What are the limitations of this analysis
+
+```{txt}
+the limitation is that we cant really know from this test which one of the group is different - 
+  one of the solution to overcome this limitation would be to run multiple t test(as many as they are of possible combinaision of different groups)
+it assumes that the data is normally distributed within each group (here within each country)
+also it assumes equal standard variation across different groups we are testing(here continents)
+
+```
+
+### Extra Credit. (10 points)
+
+Read the Summary and section "Modeling the Framework for False
+Positive Findings" from "Why Most Published Research Findings Are False" (https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124) by John Ioannidis.
+
+Show that the pre-study probability of a relationship being true is $R/(R+1)$.
+
+```{txt}
+R is the'ratio of the number of “true relationships” to “no relationships” among those tested in the field'
+let T = number of “true relationships”,
+N=number of “no  relationships”,
+and N_total = total number of relationships tested ,
+
+R =T/N
+
+p(T)=T/ N_total= T/(T+N)
+
+R =T/N ==> T=R*N
+
+so p(T) =R*N/(R*N)+N
+now lets factorize by N
+
+p(T) =N*(R/(R)+1)
+
+recall R=T/N
+so lets divide the expression above by N and we eend up with()
+(R/(R)+1)
+
+```
+
+Show that $PPV = (1-\beta)R/(R-\beta R+\alpha)$.
+
+```{txt}
+post-study probability that a finding is true is PPV
+the author also says 'The probability of a study finding a true relationship reflects the power 1 - beta '
+probability that a finding is true  is the number of true positive cases devided by the sum of the number of true positive cases and the number of false positive cases
+
+(R/(R)+1) is the probability true positive cases
+```

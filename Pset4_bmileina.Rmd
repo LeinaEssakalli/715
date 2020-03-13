@@ -1,0 +1,369 @@
+---
+title: "BMI715 Problem Set 4 (11/14/19)-Leina ESSAKALLIHOUSSAINI"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Instructions:
+
+Please submit both the Rmd file and either the knitted HTML or PDF by Thursday, November 21, 2019. 
+Problem sets may be submitted within a week past the due date at a 20% penalty; 
+each person is allowed to submit one problem late (within a week) without penalty. 
+Please comment your code, because it is part of the requirements of each exercise. 
+Missing comments will not allow the full score.
+
+You can use the R markdown file here for the submission or a regular R file + comments and formulae.
+
+If you have any questions, please post them on Canvas or email me: `aparnanathan@g.harvard.edu`.
+
+## 1. Non-Parametric Testing, Part 1 (35 points)
+
+A pharmaceutical company is testing a new soporific drug that is supposed to be more effective than the state-of-the-art medication. They recruit 10 subjects and report the hours of extra sleep. The null hypothesis $H_0$ is that there is no difference in extra hours of sleep between the two drugs.
+
+```{r , echo=FALSE , eval=TRUE}
+Subject <- 1:10
+Old_Drug <- c(2.1 , -1.5 , -0.4 , -1.1 , -0.3 , 3.7 , 3.2 , 0.6 , 0.0 , 2.2)
+New_Drug <- c(0.5 , 0.9 , 1.3 , 0.2 , -0.5 , 4.7 , 5.2 , 1.8 , 4.2 , 3.6)
+knitr::kable( cbind(Subject , New_Drug , Old_Drug ))
+```
+
+### (a) Wilcoxon signed-rank test (5 points)
+
+Calculate the Wilcoxon signed-rank T statistic.
+```{txt}
+Null - Difference old and new drug is 0 
+alternative Null - Difference old and new drug is not 0 
+```
+
+```{r}
+
+delta<-c(New_Drug-Old_Drug)
+print(delta)
+abs_delta<-abs(delta)
+print(abs_delta)
+abs_delta_sorted<-order(sort(abs_delta))
+print(abs_delta_sorted)
+
+T<-2+3+4+5+7+8+9+10 #add up the positive signs to the expected number uner ho
+print(paste0('T is ',T))
+```
+
+
+### (b) Parameters under the null hypothesis (5 points)
+
+Calculate $\mu_T$ and $\sigma_T$ under the null hypothesis.
+```{r}
+n<-10 #number of observation points
+Ut <- n*(n+1)/ T
+print(paste0('Ut is ', round(Ut,3)))
+sigmat<- sqrt(n*(n+1)*(2*n+1)/24)
+print(paste0('sigmat is ', round(sigmat,3)))
+```
+
+### (c) Normal approximation p-value (5)
+
+Calculate the p-value under the normal approximation—using T, $\mu_T$, and $\sigma_T$—and comment on the result obtained.
+```{r}
+Zt<- (T-Ut)/sigmat
+print(Zt)
+
+p_val_T<-1- (pnorm(T,mean=Ut,sd=sigmat))
+print(p_val_T) 
+
+
+
+```
+
+### (d) Built-in functions (5 points)
+
+Calculate the p-value using the built in R function for Wilcoxon signed-rank test. Are the p-values different? Are the conclusions different?
+```{r}
+wilcox_built_in<- wilcox.test(Old_Drug,New_Drug,alternative = "less" ,paired=TRUE, conf.level = 0.95)
+print(wilcox_built_in$p.value)
+#I got a differnt P value but we are still rejecting the null hypothesis 
+```
+
+
+### (e) Exact p-value (10 points)
+
+Calculate the exact p-value "by hand." Show all the steps in order to obtain it.
+```{txt}
+P value by definition is the number of outcomes as extreme as or more extreme divided total number of all possible outcomes
+P = number of times  the T-statistics is higher or equal to 48 / total number of all possible T-statistics 
+
+with total_possible_outcome = 2^n
+
+possible combinations T-statistics superior or equal to 48:
+
+1+2+3+4+5+6+7+8+9+10=55
+2+3+4+5+6+7+8+9+10=54
+1+3+4+5+6+7+8+9+10=53
+3+4+5+6+7+8+9+10=52
+1+2+4+5+6+7+8+9+10=52
+1+2+3+5+6+7+8+9+10=51
+2+4+5+6+7+8+9+10=51
+1+2+3+4+6+7+8+9+10=50
+1+4+5+6+7+8+9+10=50
+2+3+5+6+7+8+9+10=50
+1+2+3+4+5+7+8+9+10=49
+4+5+6+7+8+9+10=49
+1+3+5+6+7+8+9+10=49
+2+3+4+6+7+8+9+10=49
+1+2+3+4+5+6+8+9+10=48
+2+3+4+5+7+8+9+10=48
+3+5+6+7+8+9+10=48
+1+3+4+6+7+8+9+10=48
+1+2+5+6+7+8+9+10=48
+
+
+this is a total of 19 possiblities 
+
+```
+
+```{r}
+#P value by definition is the number of outcomes as extreme as or more extreme divided total number of all possible outcomes
+#P= number of T-statistics > =48/ total number of all possible T-statistics 
+
+total_possible_outcome <- 2^n
+outcome_as_extreme_or_more <- 19
+p_value_by_hand<-outcome_as_extreme_or_more/total_possible_outcome
+print(p_value_by_hand)
+
+```
+
+### (f) Parametric alternatives (5 points)
+
+Calculate the p-value using an appropriate equivalent parametric test and comment on the obtained results compared to the non-parametric version.
+
+```{txt}
+We have to do a t test- lets first test if we can assume equal variances (null-true ratio of variances is not equal to 1)
+
+```
+
+```{r}
+variance_test<-var.test(New_Drug,Old_Drug,alternative="two.sided",conf.level = 0.95)
+variance_test$p.value
+#this value is higher than 0.05 so we reject the null, we can assume equal variances 
+```
+```{txt}
+recap- 
+  
+   new drug can increase sleep time
+Null - sleep time with old drug= sleep time with new drug
+alternative Null - Sleep time with new drug higher than sleep time with old drug 
+
+```
+
+```{r}
+t_test_results<-t.test(New_Drug,Old_Drug,paired = TRUE, alternative = "greater",var.equal = TRUE)
+p_value_t_test<-t_test_results$p.value
+print(p_value_t_test)
+```
+```{txt}
+p is  0.0108 we can reject the null 
+```
+
+## 2. Non-Parametric Testing, Part 2 (30 points)
+
+Now, we are going to simulate a few data to see the difference between the unpaired T-test and Wilcoxon rank sum test.
+
+Imagine two vectors of length 10 from two different exponential distributions:
+
+```{r , echo = TRUE , eval = FALSE}
+x <- rexp(10 , rate = 20)
+y <- rexp(10 , rate = 60)
+```
+
+The hypothesis test is that $\mu_x$ is different than $\mu_y$ (two-sided $H_1$)
+
+### (a) Choosing the right test (5 points)
+
+What is the most appropriate test in this case and why?
+```{txt}
+In this case we have nonpaired data that is highly not nomral(exponential) - so we need unpaired t-test which is the Wilcoxon Rank Sum Test 
+
+```
+
+
+### (b) Simulations (10 points)
+
+Run a simulation with 1000 random pairs of vectors (x,y), defined like above, and show that at $\alpha$ = 0.01, the fraction of rejected null hypotheses is higher with a non parametric test. (NOTE $\alpha$ is 1%!) What does this simulation demonstrate about the two tests?
+```{r}
+set.seed(1) #for reproductibility purposes
+alpha=0.01
+wt=tt=NULL 
+for (i in 1:1000){
+  x <- rexp(10 , rate = 20)
+  y <- rexp(10 , rate = 60)
+  wt[i]=wilcox.test(x,y, paired = F,conf.level = 0.99 )$p.value
+  tt[i]=t.test(x,y,paired = F,conf.level = 0.99 )$p.value
+}
+
+plot(sort(wt),col='black', main="Pvalues",ylab="pvalue")
+points(sort(tt),col='red')
+abline(h=alpha, col='blue')
+legend(1,0.8,legend=c("non-parametric-wilcox", "parametric-ttest",'alpha threshold'),col=c('black', 'red','blue'))
+```
+```{r}
+#threshold is 0.01 OUT OF 1000 how many have a pvalue lower than this 
+print(sum(wt<0.01)/1000) #non parametric 0.214 
+print(sum(tt<0.01)/1000)# parametric 0.117
+
+#so the number of time we reject the null hypothesis is higher in the non-parametric case 
+```
+
+### (c) Log transformation (10 points)
+
+An old statistical proverb says "If the data don't behave, hit it with a log. If the data still don't behave, hit it with a log again". What happens if we log-transform the data? Run the same simulation with log(x) and log(y) and comment on the results.
+```{r}
+alpha=0.01
+wt_log=tt_log=NULL 
+for (i in 1:1000){
+  x <- rexp(10 , rate = 20)
+  y <- rexp(10 , rate = 60)
+  wt_log[i]=wilcox.test(log(x),log(y), paired = F,conf.level = 0.99)$p.value
+  tt_log[i]=t.test(log(x),log(y),paired = F,conf.level = 0.99)$p.value
+}
+
+plot(sort(wt_log),col='black', main="Pvalues",ylab="pvalue")
+points(sort(tt_log),col='red')
+abline(h=alpha, col='blue')
+legend(1,0.8,legend=c("non-parametric-wilcox", "parametric-ttest",'alpha threshold'),col=c('black', 'red','blue'))
+```
+```{r}
+print(sum(wt_log<0.01)/1000) #non parametric 
+print(sum(tt_log<0.01)/1000)# parametric 
+
+#this time more similar results
+```
+
+
+### (d) Log transformation and the Wilcoxon test (5 points)
+
+Does the log transformation improve/change the Wilcoxon test results? Why, or why not? Specifically reference how the Wilcoxon test calculates its test statistic.
+
+```{txt}
+
+The log transformation change the Wilcoxon test result(but just slightly) where as the t test result will more significantly change if we log the data- 
+The reason why this is happening is that The Wilcoxon test is a test based on the ranks of the data points, and the rank depends on the difference between 2 values, not their actual values  logs  of the values will not change the rank,  so the statistic the results will be very similar  
+```
+
+
+## 3. Correlations (35 points)
+
+The data.frame *census*, defined below, reports the US population between 1810 and 2010. 
+We want to investigate how the passage of time is correlated with the US population.
+
+### (a) Pearson (5 points)
+
+Calculate the Pearson's correlation coefficient. 
+This should be coded "by hand" (use the formulation from lecture; do not use the cor() function). 
+Report $r$ between time and US population.
+
+```{r , echo=T, eval=T}
+census <- data.frame( Year = c(1810,1820,1830,1840,1850,
+	1860,1870,1880,1890,1900,1910,1920,
+	1930,1940,1950,1960,1970,1980,1990,2000,2010),
+	Population = c(7239881,9638453,12866020,17069453,23191876,
+	31443321,39818449,50155783,62947714,75994575,91972264,105710620,
+	122775044,131669276,150697360,179323174,203302031,
+	226545805,248709873,281421906,308745538) )
+
+#census
+
+```
+
+```{r ,echo=T, eval=T} 
+#using slide
+#x population ,y year 
+
+n_points<-length(census$Year)
+y_mean=(mean(census$Year))
+x_mean=(mean(census$Population))
+sd_y=(sd(census$Year))
+sd_x=(sd(census$Population))
+
+num<-sum((census$Population-x_mean) * (census$Year-y_mean)) #numerator 
+prod_sd<-sd_y*sd_x # not dependant on i 
+correlation_coef<-num/((n_points-1)*prod_sd)
+print(correlation_coef)
+```
+
+### (b) P-value (5 points)
+
+Calculate the t statistic and a two-tailed p-value. What result do we obtain, and how do we interpret its significance?
+
+```{r, echo=T, eval=T}
+
+sd_err<- sqrt((1-correlation_coef^2)/(n_points-2))
+t_correlation<- r*sqrt((n_points-2)/(1-correlation_coef^2))
+print(t_correlation) #by hand 
+cor.test(census$Year, census$Population, alternative = "two.sided", method = "pearson" )
+```
+```{txt}
+we have a very small p value, we can reject the null hypothesis (R=0) 
+```
+
+
+### (c) Spearman (5 points)
+
+Calculate $r$ using the Spearman correlation (you do not need to do this by hand). What result do we obtain, and how do we interpret its significance?
+```{r, echo=T, eval=T}
+r_Spearman<-cor(census$Year,census$Population,method="spearman")
+print(r_Spearman)
+```
+
+### (d) Which is better? (10 points)
+
+Plot the relationship between Year and Population. 
+What do you think is the best correlation coefficient to describe and test this relationship and why?
+```{r, echo=T, eval=T}
+plot(census$Year,census$Population)
+```
+```{txt}
+by ploting the data we dont obtain a straight line(which will have been the case if the 2 variables were perfectly correlated--> R=0 )
+Therefore we can conclude that Pearson coefficient is more acruate than Spearman
+```
+
+Can you suggest any transformation to the data so that both tests are appropriate? 
+```{txt}
+"If the data don't behave, hit it with a log. If the data still don't behave, hit it with a log again" right?
+```
+
+```{r, echo=T, eval=T}
+year_log<-log(census$Year)
+population_log<-log(census$Population)
+
+cor.test(year_log, population_log, alternative = "two.sided", method = "pearson") #0.983687 -pearson
+#95 percent confidence interval: 0.9594089 0.9934927
+r_Spearman_log<-cor(year_log,population_log,method="spearman")
+print(r_Spearman_log)
+```
+
+Show your results and comment on what happens to the p-value, the correlation estimate, and the confidence interval.
+```{r, echo=T, eval=T}
+plot(year_log,population_log,main='plot of logged data')
+```
+
+### (e) Add an outlier (10 points)
+
+Let's imagine the data from 2010 got corrupted, and the replacement value is the negative of the original value! 
+Set the 2010 value to -1*(old value), and re-perform both Pearson and Spearman correlations (you may use built-in functions for both, this time). 
+Are the results still significant? Which test is affected more?
+```{r, echo=T, eval=T}
+census_2 <- data.frame( Year = c(1810,1820,1830,1840,1850,
+    1860,1870,1880,1890,1900,1910,1920,
+    1930,1940,1950,1960,1970,1980,1990,2000,2010),
+    Population = c(7239881,9638453,12866020,17069453,23191876,
+    31443321,39818449,50155783,62947714,75994575,91972264,105710620,
+    122775044,131669276,150697360,179323174,203302031,
+    226545805,248709873,281421906,-308745538)) 
+
+cor.test(census_2$Year,census_2$Population, alternative = "two.sided", method = "pearson") # r-0.3463,p value- 0.1241 - we have to accept the null - R=0 no significatant relationsip between 2 variables - this shows that by adding an outlier. the pearson method is not very robust - in fact the estimate correlation coefficiant is low now and the 95 percent confidence interval contains 0 
+cor.test(census_2$Year,census_2$Population, alternative = "two.sided", method = "spearman") #rank correlation is 0.72727 and the p value is <0.05 - more robust to outliner 
+```
+

@@ -1,0 +1,225 @@
+---
+title: "BMI715 Problem Set 3-Leina Essakalli "
+output:
+  pdf_document: default
+  html_document: default
+header-includes: \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE , eval=TRUE)
+```
+
+#### Instructions:
+
+Please submit **both the Rmd file and either the knitted HTML or PDF** by 9:45am on Friday, November 15, 2019. Problem sets may be submitted within a week past the due date at a 20% penalty; each person is allowed to submit one problem late (within a week) without penalty.
+
+If you have any questions, please post them on the discussion page on Canvas or email me: `andrewliu@g.harvard.edu`
+
+## 1. Proportion Test (20 points)
+
+You have gotten peer reviews back from your mouse xenograft work combining your new cancer therapeutic and radiation. The reviewer asks you to consider only the new drug without radiation and look at survival at the end of one month (i.e. comparing mice that did and did not receive the drug). You proceed to conduct follow up experiments. In 134 mice (with xenografts) that did not recieve the drug, 25 were alive after a month. In 80 mice (with xenografts) that did receive the drug, 34 were alive after a month. We wish to test
+
+$$
+H_0: p_1 = p_2 \\
+H_a: p_1 \neq p_2
+$$
+
+### (a) If the null hypothesis is true, what is the estimated value of proportion $\hat{p}$? Can we assume normal approximation for the two proportions $\hat{p_1}$ and $\hat{p_2}$? (10 points)
+```{r}
+P1_hat= 25/134
+n1=134
+P2_hat=34/80
+n2=80
+p_hat= round((n1*P1_hat+n2*P2_hat)/(n1+n2),digits=4)
+print(paste0('under the null p hat is ',p_hat))
+#can we assume normal approximation for the two proportion?
+print(paste0('for population 1, npq~=',round((1-P1_hat)*n1*P1_hat), 'higher than 5 so yes we can assume normal'))
+print(paste0('for population 2, npq~=',round((1-P2_hat)*n2*P2_hat),' higher than 5 so yes we can assume normal'))
+
+```
+
+
+
+### (b) Calculate the Z-statistics and the p-value. Do we accept or reject the null hypothesis? (If you are doing this by R and not by hand, keep in note that the prop.test() function calculates the Chi-squared statistics, not the Z-statistics. So, in this case, try to find how Chi-squared statistics is related to the Z-statistics!) (10 points)
+
+```{r}
+#hypothesis testinf for 2 propitions P1= 25/134 and P2= 34/80
+
+Z= (P1_hat-P2_hat)/(sqrt(p_hat*(1-p_hat)*((1/n1)+ (1/n2))))
+print(paste0('the Z statistics is ',round(Z,digits=2)))
+
+
+#p-value for 2 tails - 
+
+P_value<- 2*(pnorm(Z,mean=0,sd=1))
+print(paste0('the pvalue is ',round(P_value,digits = 6)))
+
+```
+
+
+## 2. Contingency tables (35 points)
+
+A statistical analysis that combines the results of several studies on the same subject is called a meta-analysis. 
+A meta-analysis from 2006 compared aspirin with placebo on incidence of heart attack and of stroke, 
+separately for men and from women (J. Am. Med. Assoc., 295: 306-313, 2006). 
+For the Women's Health Study, heart attacks were reported for 198 of 19,934 taking aspirin 
+and for 193 of 19,942 taking placebo. 
+We are interested in whether aspirin is helpful in reducing the risk of heart attack.
+
+NOTE: 19,934 and 19,942 are the total number of women in the two groups!
+
+### (a) State the null hypothesis and the alternative hypothesis. (2 points)
+```{txt}
+p_aspirin=198/19934
+p_placebo=193/ 19942
+Null hypothesis p_aspirin=p_placebo
+alternative Hypothesis p_aspirin is not equal to p_placebo
+```
+
+
+### (b) Construct the 2 x 2 contingency table that cross classifies the treatment (aspirin, placebo) and heart attack status (yes, no). (3 points)
+```{r}
+
+contingency_table<-matrix(c(198,193,198+193,19736,19749,39485,19934,19942,39876),nrow=3,ncol=3)
+colnames(contingency_table) <- c("yes","no","total")
+rownames(contingency_table) <- c("apirin","placebo","total")
+contingency_table
+```
+
+### (c) Perform the chi-square test. Report the test statistic (5 points), the degrees of freedom (5 points) and calculate the p-value without using the R chisquare built-in function (10 points). What conclusion can you draw from this test? (5 points)
+```{txt}
+the degree of freedom is 1 
+```
+
+```{r}
+# step ONE -create expected frequency under nullif p_aspirin=p_placebo - 
+#EIJ = TI*TJ/N 
+#with (TJ1=391,TJ2=39485,TI1=19934,TI2=19942 and N=39876 )
+expected_table<-matrix(c(195.46,195.54,195.46+195.54,  19738.54, 19746.46,19738.54+19746.46,195.46+19738.54 ,195.54+19746.46 ,39876),nrow=3,ncol=3)
+colnames(expected_table) <- c("yes","no","total")
+rownames(expected_table) <- c("apirin","placebo","total")
+print('expected table without totals' )
+#print(expected_table)
+print(expected_table[1:2,1:2]) #without totals 
+X_squared<-sum((contingency_table[1:2,1:2]-expected_table[1:2,1:2])**2/(expected_table[1:2,1:2]))
+print(paste0('X square is ',round(X_squared,digits = 3)))
+P_value_chi_square=1-pchisq(X_squared,1)
+print(paste0('the p value is ',round(P_value_chi_square,digits = 4)))
+```
+```{txt}
+P value is >0.05 so we dont reject the null - so p_aspirin=p_placebo 
+```
+
+
+NOTE: 1. You'll need to come up with an expected frequencies table; do **not** take the placebo column frequencies and multiply them into the aspirin column. Instead, find the 2x2 table that has $\frac{\text{heart attack}}{\text{no heart attack}}$ in column 1 = $\frac{\text{heart attack}}{\text{no heart attack}}$ in column 2 and keeps the same marginal values of the observed table. 2. Although you cannot use `chisq.test` for this part of the problem, you can use `pchisq`.
+
+### (d) Perform the chi-square test using R. (5 points)
+```{r}
+Xsq <- chisq.test(contingency_table[1:2,1:2],correct=FALSE) #[1:2,1:2] to dont consider the totals
+Xsq
+```
+
+NOTE: look at `chisq.test()` function and use correct=FALSE to get the same result as above.
+
+## 3. Fisher's Exact Test (25 points)
+
+Consider the following example of contingency table from a study evaluating the correlation between gender and diet:
+
+```{r , echo=TRUE , eval=TRUE}
+diet <- data.frame( Diet = c(2,8) , NoDiet = c(10,12) )
+rownames(diet) <- c("Men" , "Women")
+print(diet) # i changed this because otherwise it causes a bug in my code 
+```
+
+We want to test whether men are less prone to start a diet than women (one-tail test).
+
+### (a) State the $H_0$ and $H_1$ hypotheses for this test (5 points)
+```{txt}
+#m=2/12 -0.166
+#f=8/20 -0.4
+Null-p1(male)=p2(female)
+alternative - p1<p2
+```
+
+### (b) Display the tables that are as 'extreme' as or more extreme than the observed table (10 points).
+
+NOTE: We only want tables that are more 'extreme' in the direction of men being **less** prone to start a diet (one tail). The easiest way to generate these tables is to look at the observed table, spot the cell with the lowest value and find the tables with a lower value in that cell.
+```{txt}
+
+more extreme - men that do diet(out of 12 is 0,1)
+As extreme - 2/12 men  do diet 
+TABLE 1 - 0/12 men do diet
+#        yes diet | no diet| total
+#men   |    0     |   12    |   12
+#  -----------------------------------
+#women |   10     |   10    |   20
+#  ---------------------------------
+#total |     10    |    22  |   32 
+
+a<-0,b<-12,c<-10,d<-10,n<-32
+
+
+TABLE 2 -1/12 men do diet
+#        yes diet | no diet| total
+#men   |    1     |   11  | 12
+#  ---------------------------------
+#women |    9     |   11  | 20
+#  ----------------------------------
+#total |  10      |  22   | 32 
+
+a<-1, b<-11,c<-9,d<-11,n<-32
+
+TABLE 3- 2/12 men do diet
+#        yes diet | no diet| total
+#men   |    2    |   10    |   12
+#  --------------------------------
+#women |    8     |   12   |   20
+#  --------------------------------
+#total |  10    |    22  |   32   
+
+a<-2, b<-10,c<-8,d<-12,n<-32
+
+
+```
+
+### (c) Calculate the probabilities of each table and sum them to obtain the p-value of the Fisher's Exact test (5 points)
+```{r}
+#Probablity to obtain the tables is given by 
+#P-table_n= ((factorial(a+b))*(factorial(c+d))*(factorial(a+c))*(factorial(b+d))) / ((factorial(n))*(factorial(a))*(factorial(b))*(factorial(c))*(factorial(d)))
+#FOR ALL TABLES
+n<-32
+
+a_1<-0
+b_1<-12
+c_1<-10
+d_1<-10
+p_table1<-((factorial(a_1+b_1))*(factorial(c_1+d_1))*(factorial(a_1+c_1))*(factorial(b_1+d_1))) / ((factorial(n))*(factorial(a_1))*(factorial(b_1))*(factorial(c_1))*(factorial(d_1)))
+a_2<-1
+b_2<-11
+c_2<-9
+d_2<-11
+p_table2<-((factorial(a_2+b_2))*(factorial(c_2+d_2))*(factorial(a_2+c_2))*(factorial(b_2+d_2))) / ((factorial(n))*(factorial(a_2))*(factorial(b_2))*(factorial(c_2))*(factorial(d_2)))
+
+a_3<-2
+b_3<-10
+c_3<-8
+d_3<-12
+p_table3<-((factorial(a_3+b_3))*(factorial(c_3+d_3))*(factorial(a_3+c_3))*(factorial(b_3+d_3))) / ((factorial(n))*(factorial(a_3))*(factorial(b_3))*(factorial(c_3))*(factorial(d_3)))
+p_value_fisher<-p_table1+p_table2+p_table3
+
+print(paste0('the probablity of obtaining the table 1 is ',round(p_table1,digits = 4)))
+print(paste0('the probablity of obtaining the table 2 is ',round(p_table2,digits = 4)))
+print(paste0('the probablity of obtaining the table 3 is ',round(p_table3,digits = 4)))
+print(paste0('the p value is therefore ',round(p_value_fisher,digits = 4)))
+```
+
+### (d) Calculate the p-value using the built-in R function for Fisher test and comment the result obtained including the Odds Ratio obtained (5 points)
+
+
+```{r}
+build_in_function_result<-fisher.test(diet, or = 1, alternative="less")
+print(build_in_function_result) #the p value is the same as above 
+#odd ratio is  0.3109 - this is p1(male)/p2(female) - ratio is lower the one so this means that men are less likely to start a diet 
+```
+

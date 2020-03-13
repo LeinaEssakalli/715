@@ -1,0 +1,349 @@
+---
+title: "BMI715 Problem Set 1 (due 10/31/19)-Leina ESSAKALLIHoussaini"
+author: Giorgio Melloni, with additions by Andrew Liu
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#### Instructions:
+Please submit this problem set before class on Thursday, October 31, 2019. 
+Problem sets may be submitted within a week past the due date at a 20% penalty; 
+each person is allowed to submit one problem late (within a week) without penalty. 
+Please comment your code, because it is part of the requirements of each exercise. 
+Missing comments will not allow the full score.
+
+You can use the R markdown file here for the submission or a regular R file + comments and formulae.
+
+An example of using code in R markdown:
+```{r}
+rnorm(n = 10, mean = 0, sd = 1)
+```
+
+If you have any questions, please post them on Canvas or email me: `andrewliu@g.harvard.edu`.
+
+# 1. Random variables and distributions (points:30)
+A. Assume that a 12-sided die is fair, i.e. if the die is rolled once, the probability of getting each of the twelve numbers is 1/12. Calculate the probability of the following events.
+
+* Rolling the die once, what is the probability of getting a number less than 4? (points: 5)
+```{r}
+#we want P(X<4) =P(X=1)+P(X=2)+P(X=3) (P(X=0) is not possible for die)
+# P(X=1)=P(X=2)=P(X=3) and each one is equal to 1/12
+p_1=1/12*3
+print(paste0('Rolling the die once, the probability of getting a number less than 4 is :',p_1))
+```
+
+* Rolling the die twice, what is the probability that the sum of two rolling numbers is less than 4? (points: 7)
+```{r}
+#to acheive that there are 3 different senarios possible 
+#1st senario - roll 1 result - 1 and  roll 2 result - 1 -total =2
+#2nd senario - roll 1 result - 1 and  roll 2 result - 2-total =3
+#3rd senario - roll 2 result - 1 and  roll 2 result - 1-total =3
+
+
+# in total when we roll the 12 sided dice 2 times that the 144 different combinaision 
+#therefore the probablity is 3/144 
+```
+
+B. Let *p* be the probability of obtaining a head when flipping a coin. Suppose that Jake flipped the coin $n$ $(n \ge 1)$ times. Let $X$ be the total number of heads he obtained.
+
+* What distribution does the random variable X follow? Is X a discrete or continuous random variable? (points: 5)
+
+
+```{r}
+#We have a binomial (n trial, sucess or faillure at each trial,each observation is independant ) and discrete random variable 
+```
+
+
+* What is the probability of getting k heads when flipping the coin n times, i.e. what is $P(X = k) (0 \le k \le n)$? (Write down the mathematical formula for calculating this probability.) (points: 5)
+```{txt}
+ P(X=k) =  {N\choose k} * p**k * (1-p)**(n-k)
+P(X=k) =  (N!\k!(N-k)!) * p^k * (1-p)^(n-k)
+please not i didnt know how to write it in a more'elagant'way -latex etc 
+```
+
+* Suppose p = 0.1 and n = 30. Calculate the probabilities $P(X = 4)$ and $P(X \ge 4)$. (You may need the functions `dbinom` and `pbinom` in R to calculate these two probabilities. Use `?dbinom` and `?pbinom` to get help information of these two functions). (points 4)
+```{r}
+#p = 0.1 and n = 30. 
+#P(X = 4)?
+print("the proba of p(X=4) is ,")
+print((dbinom(x=4,size=30,prob=0.1)))
+
+#P(X >= 4)?
+#P(X >= 4) = 1-P(X<=3) -pbinom only accept a lower tail 
+print("the proba of p(X>=4) is ,")
+print((1-pbinom(q=3,size=30,prob=0.1)))
+```
+
+C. Recall that ${n \choose k}$, defined as "the number of ways to choose $k$ items from $n$ of them," is used in the binomial distribution. A card player is dealt a 13-card hand from a well-shuffled, standard deck of 52 cards. In the below problems, don't try to compute by hand; use a computer/calculator.
+
+* Using ${n \choose k}$ for various values of $n$ and $k$, what is the probability that the hand has no hearts? (points 4)
+```{r}
+comb = function(n, k) {
+  factorial(n) / factorial(n-k) / factorial(k)
+}
+nb_way_to_select_13_card_from_52=comb(n=52,k=13)
+#39 is the number of cards remaining after we remove all heart  (52-52/4)
+nb_way_to_select_13_card_from_39=comb(n=39,k=13)
+p_no_heart=nb_way_to_select_13_card_from_39/nb_way_to_select_13_card_from_52
+print('the probability that the hand has no hearts is ')
+print(p_no_heart)
+
+```
+
+* **Extra credit:** Again using ${n \choose k}$, what is the probability that the hand is void in at least one suit ("void in a suit" means having no cards of that suit)? (From Harvard Statistics 110, Fall 2011, Problem Set 1.) (points 5)
+
+# 2. Normal Distribution and Z-score (points:40)
+
+A. The BMI (Body Mass Index) is a measure of the weight to height ratio, and it is defined as the weight (W) in kg divided by the squared height (H) in meters squared:
+
+$$ BMI=\frac{W}{H^{2}} $$
+
+Assume that the population distribution of BMI is log-normal with log base $e$, therefore $log_e(BMI)$ is a normal distribution with mean = 2.5 and variance = 2.25.
+
+* Plot in R the density and the cumulative probability curves of log(BMI). (points 4)
+```{r}
+#density probability curves of log(BMI)
+x<-seq(-10,10,.01)
+curve(dnorm(x,mean=2.5,sd=sqrt(2.25)),from = -10, to = 10,xlab ='random variable x',ylab='Probability')
+
+```
+
+```{r}
+#cumulative probability curves of log(BMI)
+curve(pnorm(x,mean=2.5,sd=sqrt(2.25)),from = -10, to = 10,xlab ='random variable x',ylab='Probability')
+```
+
+
+TIP: Use the commands `dnorm` and `pnorm` and `curve` to plot
+
+* Using the cumulative probability, calculate in R the area under the density curve between x=0.5 and x=4. (points: 6)
+```{r}
+#if culumative =c(x) area under curve of density curve between x=0.5 and x=4 is c(4)=c(0.5)
+AUC<-pnorm(4,mean=2.5,sd=sqrt(2.25),lower.tail = TRUE)-pnorm(0.5,mean=2.5,sd=sqrt(2.25),lower.tail = TRUE)
+print('the area under the density curve between x=0.5 and x=4 is ')
+print(AUC)
+#checking with bear eye this result seem resonable 
+
+```
+
+* A definition of "being obese" is a BMI value of at least 30. What fraction of our population can be considered obese? (points: 6)
+
+TIP: pay attention to the logarithm!
+```{r}
+r_variable_for_limit_obese<-log(30) #because the random variable is expressed in log 
+#pnorm is p(x<=x) we want p(x>log(30)) so we need to compute 1-pnorm
+proba_obese<-1-pnorm(r_variable_for_limit_obese,mean=2.5,sd=sqrt(2.25))
+print('The fraction of our population can be considered obese is')
+print(paste0(proba_obese*100,'%'))
+```
+
+* The 90th percentile of the BMI is the value such that 90% of the population has a BMI lower than this value. Find the 90th percentile for log(BMI) using `qnorm`. (points: 6)
+```{r}
+#we want to find at which random variable X pnorm =0.9 
+percentile_90_logBMI=qnorm(0.9,mean=2.5,sd=sqrt(2.25),lower.tail = TRUE)
+print('The 90th percentile of the BMI is ')
+print((percentile_90_logBMI))
+
+```
+
+B. Assume that blood-glucose level in a population of adult women is normally distributed with mean 90 mg/dL and standard deviation 38 mg/dL. Answer the following questions:
+
+* What percentage of women shows levels above or equal to 80.5 mg/dL? (points: 6)
+```{r}
+#plot just to check if my results seem resonable
+curve(dnorm(x,mean=90,sd=38),from = -100, to = 300,xlab ='random variable x',ylab='Probability')
+curve(pnorm(x,mean=90,sd=38),from = -100, to = 300,xlab ='random variable x',ylab='Probability')
+```
+```{r}
+print('The percentage of women shows levels above or equal to 80.5 mg/dL is ')
+percentage_w<-(1-pnorm(80.5,mean=90,sd=38))*100
+print(paste0(percentage_w,'%'))
+```
+
+* Suppose that the "abnormal range" is defined to be glucose levels which are 1.5 standard deviations above the mean or 1.5 standard deviations below the mean. What percentage of women would be classified "abnormal"? (points: 6)
+```{r}
+#because its symsteric we can just multiply the area under the curve for the lower tail by 2 
+lower_limt<-90-1.5*38 
+
+abnoromal_proportion<-2*pnorm(lower_limt,mean=90,sd=38)
+print('The percentage of women would be classified "abnormal is')
+print(paste0(abnoromal_proportion*100,'%'))
+```
+
+* Suppose now that we want to redefine the abnormal range to be more than 'c' standard deviations above the mean or less than 'c' standard deviations with 'c' chosen so that 4 % of the population will be classified as abnormal. What should 'c' be? (points: 6)
+```{r}
+
+right_tail=qnorm(.02, mean = 90, sd = 38)
+#right_tail
+standard_deviation_c<- -(right_tail-90)/38
+print('c is ')
+print(standard_deviation_c)
+```
+
+# 3. Simulation of distributions of random variables (points: 30)
+
+Consider $X$ a random variable from any distribution with mean $\mu$ and variance $\sigma^2$.
+
+If we sample $n$ values from that distribution, we can calculate the mean value $\bar{x_n}$ which is itself the realization 
+of a random variable $\bar{X_n}$.
+
+In this exercise we will evaluate some properties of the following:
+
+## 3.1 Normal Distribution (points: 15)
+
+* Using `rnorm` create a vector of 1000 values from a normal distribution with $\mu=0$ and $\sigma=1$. We call this vector $m0$. (points: 1)
+```{r}
+m0 <- rnorm(1000, mean = 0, sd = 1)
+#mo
+```
+
+* Using the same command, for each of $n=10, 100$ and $1000$, construct a vector of 1000 elements, where each element is a mean of $n$ numbers randomly sampled from the normal distribution. (points: 1)
+We will call these vectors $m10$, $m100$, $m1000$.
+```{r}
+m10<-replicate(1000,mean({x=rnorm(10,mean = 0, sd = 1)}))
+m100<-replicate(1000,mean({x=rnorm(100,mean = 0, sd = 1)}))
+m1000<-replicate(1000,mean({x=rnorm(1000,mean = 0, sd = 1)}))
+```
+* Create a 4 panels plot (You can use an histogram or a density plot or both) showing the distributions of: (points: 2)
+
+1) The 1000 values from the distribution ($m0$)
+2) The 1000 means using n = 10 ($m10$)
+3) The 1000 means using n = 100 ($m100$)
+4) The 1000 means using n = 1000 ($m1000$)
+```{r}
+hist(m0,breaks=30)
+hist(m10,breaks=30)
+hist(m100,breaks=30)
+hist(m1000,breaks=30)
+```
+
+* Using the function `qqnorm`, compare theoretical and sample quantiles of a normal distribution. Do the distributions look normal? (points: 3)
+```{r}
+qqnorm(m0)
+qqnorm(m10)
+qqnorm(m100)
+qqnorm(m1000)
+```
+```{txt}
+the graph obtained are a straight line - so it looks nomral 
+```
+
+Now evaluate the value of the mean and variance of each of the 4 vectors. 
+
+* Are the means substantially different from each other? (points: 2)
+```{r}
+print(mean(m0))
+print(mean(m10))
+print(mean(m100))
+print(mean(m1000))
+```
+```txt 
+The mean are slighlty differents - the difference is explained by the fact that as we increase the sample size- the sample mean is closer to the population mean
+```
+
+* Are the variances different from each other? If yes, what is the ratio between $Var(m0)$ and the other variances? (e.g., $Var(m0)/Var(m10)$ , $Var(m0)/Var(m100)$) (points: 3)
+```{r}
+print(var(m0))
+print(var(m10))
+print(var(m100))
+print(var(m1000))
+
+ratio0_10<-var(m0)/var(m10)
+ratio0_100<-var(m0)/var(m100)
+print('the ratio Var(m0)/Var(m10)is ')
+print(ratio0_10)
+print('the ratio Var(m0)/Var(m100)is ')
+print(ratio0_100)
+```
+```{txt}
+As the sample size increase by n we observed the variance decrease by n
+```
+
+* If you see any pattern, can you derive a general formula for the Variance of the distribution of the means $\bar{X_n}$ for any given $n$ (points: 3)
+```{txt}
+As explained earlier variance proportional to  1/n the sample size (with n being the sample size)
+```
+
+ˆ
+## 3.2 Non-normal distribution (points: 15, evaluated as 3.1)
+
+Repeat the exercise 3.1 but using a different random variable 
+following the exponential distribution, $f(x) = \lambda e^{-\lambda x}$. 
+To run this simulation use the function `rexp` with rate (i.e. $\lambda$) value **0.2**.
+
+* Plot the distribution of the 4 vectors
+```{r}
+e0<-rexp(1000,0.2)
+e10<-replicate(1000,mean({rexp(10,0.2)}))
+e100<-replicate(1000,mean({rexp(100,0.2)}))
+e1000<-replicate(1000,mean({rexp(1000,0.2)}))
+```
+
+```{r}
+hist(e0,breaks=30) # looks more like exponential decay 
+hist(e10,breaks=30)
+hist(e100,breaks=30)
+hist(e1000,breaks=30)
+```
+
+```{r}
+qqnorm(e0)
+qqnorm(e10)
+qqnorm(e100)
+qqnorm(e1000)
+```
+```{txt}
+Compare theoretical and sample quantiles of a normal distribution :
+  the distribution doesnt look normal for e0(not a straight line)- but roughly straight for e10- e100 and e1000 so we can say that those look nomral 
+```
+
+
+
+```{r}
+print(mean(e0))
+print(mean(e10))
+print(mean(e100))
+print(mean(e1000))
+```
+```{r}
+mean(e1000)/mean(e0)
+```
+
+
+```{txt}
+The value of the mean increases as the sample size increases but not by much -- mean e1000/mean(e0) is 1.047
+```
+
+
+
+```{r}
+print(var(e0))
+print(var(e10))
+print(var(e100))
+print(var(e1000))
+```
+
+```{r}
+ratioe0_10=var(e0)/var(e10)
+ratioe0_100=var(e0)/var(e100)
+print('the ratio Var(e0)/Var(e10)is ')
+print(ratioe0_10)
+print('the ratio Var(e0)/Var(e100)is ')
+print(ratioe0_100)
+```
+```{txt}
+the variance is approximately proprotional to the sample size 
+
+```
+
+```
+
+* Using `qqnorm` like above, evaluate normality. Are the exponential values normally distributed? What about the means?
+
+* Evaluate the mean and variance as above (1. are the means and variances substantially different from each other, 2. a general formula for the variance).
